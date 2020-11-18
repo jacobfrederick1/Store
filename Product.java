@@ -1,28 +1,28 @@
 public class Product {
     double price;
-    int quantity;
+    double sellingPrice;
 
     public Product(){
         price = 5.99;
-        quantity = 25;
+        sellingPrice = 25;
     }
     
-    public Product(int price,int quantity){
+    public Product(double price, double d){
        
         this.price = price;
-        this.quantity = quantity;
+        this.sellingPrice = d;
     }
     
     public void setPrice(double price) {
         this.price = price;
     }
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
+    public void setsellingPrice(int sellingPrice) {
+        this.sellingPrice = sellingPrice;
     }
     public double getPrice() {
         return price;
     }
-    public int getQuantity() {
-        return quantity;
+    public double getsellingPrice() {
+        return sellingPrice;
     }
 }
