@@ -11,7 +11,7 @@ public class Store {
     public String process(String dataFile){
         double moneyIn = 0;
         double moneyOut = 0;
-        String statements = " ";
+        String statements = "";
         try{
 
             File file = new File(dataFile);
@@ -20,21 +20,22 @@ public class Store {
            while(infile.hasNext()){
                String process = infile.next();
                String item = infile.next();
-
                if(process.equals("new")){
                    if(!products.containsKey(item)){
                     products.put(item, new Product(Double.parseDouble(infile.next()),Double.parseDouble(infile.next()),0));
+                    statements +=  item + " added to inventory\n";
                    }
                    else{
-                       statements += "Error Product already in Store\n";
+                       statements += "Error: " + item + " already in inventory\n";
                    }
                 }
                else if(process.equals("delete")){
                     if(products.containsKey(item)){
                         products.remove(item);
+                        statements += item + " removed from inventory with a total loss of $" + Math.round(products.get(item).quantity * products.get(item).getPrice())+ "\n";
                     }
                     else{
-                        statements += "Error product could not be removed because it does not exist\n";
+                        statements += "Error: " + item + " not in inventory\n";
                     }
                 }
                else if(process.equals("buy")){
@@ -42,40 +43,47 @@ public class Store {
                         double quantity = Double.parseDouble(infile.next());
                         moneyOut += products.get(item).getPrice() * quantity;
                         products.get(item).setQuantity(quantity);
+                        statements +=  products.get(item).getQuantity() + " added to inventory with a total cost of $" + Math.round(products.get(item).quantity*products.get(item).getPrice()) + "\n" ;
                     }
-                    statements += "item not in inventory";
+                    else{
+                        statements += "Error: " + item + " not in inventory \n";
+                        infile.next();
+                    }
                 }
                else if(process.equals("sell")){
                    double sold = Double.parseDouble(infile.next());
                    if(products.containsKey(item) && products.get(item).getQuantity() > sold ){
-                        moneyIn += products.get(item).sellingPrice*sold;
+                        moneyIn += Math.round(products.get(item).sellingPrice*sold);
                         products.get(item).setQuantity(products.get(item).getQuantity()-sold);
+                        statements += sold + " units of " + item + " sold at a total price of $" + products.get(item).getsellingPrice() +" for a profit of $" + Math.round(products.get(item).getsellingPrice() * sold) + "\n";
                     }
                     else if(products.containsKey(item) && products.get(item).getQuantity() < sold ){
-                        System.out.print("The amount sold is more than the store carries");
+                        statements += "Error: " + sold + " exceeds units of " + item + " in inventory\n";
                     }
                     else{
-                        System.out.print("The product is not avaliable at the store");
+                        statements += "Error: " + item + " not in inventory \n";
                     }
                 }
                 else if(process.equals("item")){
                     if(products.containsKey(item)){
-                        products.get(item).toString();
+                        statements += "ID: " + item + products.get(item).toString() + "\n";
                     }
                     else{
-                        System.out.print("Product not avaliable in store");
+                        statements += "Error: " + item + " not in inventory \n";
                     }
                 }
                 else if(process.equals("report")){
-                    System.out.print("Total Cost: $" + moneyOut + ", Total Profit: $" + (moneyIn-moneyOut));
+                    statements += "Total cost: $" + moneyOut + ", Total profit: $" + Math.round(moneyIn - moneyOut);
                 }
-                break;
+                else{
+                    break;
+                }
             }
         infile.close();
     } 
         catch (Exception e) {
             System.out.println("Error file not found");
         }
-        return null;
+        return statements;
     }
 }
