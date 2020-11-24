@@ -34,4 +34,8 @@ public class Product {
     public double getQuantity() {
         return quantity;
     }
+    public String toString(){
+        return " buyPrice: " + price + " sellingPrice: " + sellingPrice + " Quantity: " + quantity;
+        
+    }
 }
