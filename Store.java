@@ -3,14 +3,15 @@ import java.io.*;
 
 public class Store {
     Map<String, Product> products;
-    double moneyIn = 0;
-    double moneyOut = 0;
+    double profit = 0;
+    double cost = 0;
 
     public Store() {
         products = new HashMap<>();
     }
 
     public String process(String dataFile) {
+        String statements = "";
         try {
 
             File file = new File(dataFile);
@@ -18,21 +19,38 @@ public class Store {
 
             while (infile.hasNext()) {
                 String process = infile.next();
-                String item = infile.next();
-                if (process.equals("new")) {
-                    System.out.print(newItem(item, Double.parseDouble(infile.next()), Double.parseDouble(infile.next())));
-                } else if (process.equals("delete")) {
-                    System.out.print(delete(item));
-                } else if (process.equals("buy")) {
-                    System.out.print(buy(item, Integer.parseInt(infile.next())));
-
-                } else if (process.equals("sell")) {
-                    System.out.print(sell(item,Integer.parseInt(infile.next())));
-                } else if (process.equals("item")) {
-                    System.out.print(item(item));
-                } else if (process.equals("report")) {
-                    System.out.print(report());
-                } else {
+                if(!process.equals("*")){
+                    if(!process.equals("report")){
+                        String item = infile.next();
+                        if (process.equals("new")) {
+                            if (!products.containsKey(item)) {
+                                products.put(item, new Product(Double.parseDouble(infile.next()), Double.parseDouble(infile.next()), 0));
+                                statements += item + " added to inventory\n" + "\n";
+                            } 
+                            else {
+                                infile.next();
+                                infile.next();
+                                statements += "ERROR: " + item + " already in inventory\n"+ "\n";
+                            }
+                        }
+                        else if (process.equals("delete")) {
+                            statements += delete(item)+ "\n";
+                        }
+                        else if (process.equals("buy")) {
+                            statements += buy(item, Integer.parseInt(infile.next())) + "\n";
+                        }
+                        else if (process.equals("sell")) {
+                            statements += sell(item,Integer.parseInt(infile.next()))+ "\n";
+                        }
+                        else if (process.equals("item")) {
+                            statements += item(item)+ "\n";
+                        }
+                    }
+                    else{
+                        statements += report()+ "\n";
+                    }
+                }
+                else{
                     break;
                 }
             }
@@ -40,68 +58,69 @@ public class Store {
         } catch (FileNotFoundException e) {
             System.out.println("Error file not found");
         }
-        return "";
+        return statements;
     }
 
     public String buy(String item, int quantity) {
         if (products.containsKey(item)) {
-            moneyOut += products.get(item).getPrice() * quantity;
-            products.get(item).setQuantity(quantity);
-            return products.get(item).getQuantity() + " units of " + item + " added to inventory with a total cost of $"
-                    + products.get(item).quantity * products.get(item).getPrice() + "\n";
+            cost += products.get(item).getPrice() * quantity;
+            products.get(item).setQuantity(products.get(item).quantity + quantity);
+            return String.format(
+                    products.get(item).getQuantity() + " units of " + item
+                            + " added to inventory at a total cost of $%1.2f\n",
+                    products.get(item).quantity * products.get(item).getPrice());
         } else {
-            return "Error: " + item + " not in inventory \n";
+            return "ERROR: " + item + " not in inventory \n";
 
         }
     }
 
-    public String sell(String item,int sold) {
+    public String sell(String item, int sold) {
         double currentSale = 0;
-        if (products.containsKey(item) && products.get(item).getQuantity() > sold) {
-            currentSale = products.get(item).sellingPrice * sold;
-            moneyIn += currentSale;
-            products.get(item).setQuantity(products.get(item).getQuantity() - sold);
-            return sold + " units of " + item + " sold at a total price of $"
-                    + products.get(item).getsellingPrice() + " for a profit of $" + currentSale + "\n";
-        } else if (products.containsKey(item) && products.get(item).getQuantity() < sold) {
-            return "Error: " + sold + " exceeds units of " + item + " in inventory\n";
+        if (products.containsKey(item)) {
+            if (sold <= products.get(item).quantity) {
+                currentSale = products.get(item).getSellingPrice() * sold - (products.get(item).price * sold);
+                profit += currentSale;
+                cost -= products.get(item).price * sold;
+                products.get(item).setQuantity(products.get(item).getQuantity() - sold);
+                return sold + " units of " + item
+                        + String.format(" sold at a total price of $%.2f", products.get(item).getSellingPrice() * sold)
+                        + " for a profit of $" + String.format("%.2f", currentSale) + "\n";
+            } else {
+                return "ERROR: " + sold + " exceeds units of " + item + " in inventory\n";
+            }
         } else {
-            return "Error: " + item + " not in inventory \n";
+            return "ERROR: " + item + " not in inventory \n";
         }
     }
 
     public String delete(String item) {
         if (products.containsKey(item)) {
-            String statement = item + " removed from inventory with a total loss of $"
-            + products.get(item).quantity * products.get(item).getPrice() + "\n";
+            String statement = String.format(item + " removed from inventory for a total loss of $%.2f \n",
+                    products.get(item).quantity * products.get(item).getPrice());
+
+            cost -= products.get(item).quantity * products.get(item).price;
+            profit -= products.get(item).quantity * products.get(item).price;
 
             products.remove(item);
             return statement;
-        }
-        else {
+        } else {
             return "ERROR: " + item + " not in inventory\n";
         }
     }
 
     public String item(String item) {
         if (products.containsKey(item)) {
-            return "ID: " + item + products.get(item).toString() + "\n";
+            return "ID: " + item + "," + products.get(item).toString() + "\n";
         } else {
-            return "Error: " + item + " not in inventory \n";
-        }
-    }
+            return "ERROR: " + item + " not in inventory\n";
 
-    public String newItem(String item, Double buyPrice, Double sellPrice) {
-        if (!products.containsKey(item)) {
-            products.put(item, new Product(buyPrice, sellPrice, 0));
-            return item + " added to inventory\n";
-        } else {
-            return "ERROR: " + item + " already in inventory\n";
         }
     }
 
     public String report() {
-       return "Total cost: $" + moneyOut + ", Total profit: $" + Math.round(moneyIn - moneyOut);        
+        return String.format("Total cost: $%.2f, Total profit: $%.2f", cost, profit);
+
     }
 
 }
