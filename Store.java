@@ -88,11 +88,11 @@ public class Store {
     public String buy(String item, int quantity) {
         if (products.containsKey(item)) {
             cost += products.get(item).getPrice() * quantity;
-            products.get(item).setQuantity(products.get(item).quantity + quantity);
+            products.get(item).setQuantity(products.get(item).getQuantity() + quantity);
             return String.format(
                     products.get(item).getQuantity() + " units of " + item
                             + " added to inventory at a total cost of $%1.2f\n",
-                    products.get(item).quantity * products.get(item).getPrice());
+                    products.get(item).getQuantity() * products.get(item).getPrice());
         } else {
             return "ERROR: " + item + " not in inventory \n";
 
@@ -109,10 +109,10 @@ public class Store {
     public String sell(String item, int sold) {
         double currentSale = 0;
         if (products.containsKey(item)) {
-            if (sold <= products.get(item).quantity) {
-                currentSale = products.get(item).getSellingPrice() * sold - (products.get(item).price * sold);
+            if (sold <= products.get(item).getQuantity()) {
+                currentSale = products.get(item).getSellingPrice() * sold - (products.get(item).getPrice() * sold);
                 profit += currentSale;
-                cost -= products.get(item).price * sold;
+                cost -= products.get(item).getPrice() * sold;
                 products.get(item).setQuantity(products.get(item).getQuantity() - sold);
                 return sold + " units of " + item
                         + String.format(" sold at a total price of $%.2f", products.get(item).getSellingPrice() * sold)
@@ -134,10 +134,10 @@ public class Store {
     public String delete(String item) {
         if (products.containsKey(item)) {
             String statement = String.format(item + " removed from inventory for a total loss of $%.2f \n",
-                    products.get(item).quantity * products.get(item).getPrice());
+                    products.get(item).getQuantity() * products.get(item).getPrice());
 
-            cost -= products.get(item).quantity * products.get(item).price;
-            profit -= products.get(item).quantity * products.get(item).price;
+            cost -= products.get(item).getQuantity() * products.get(item).getPrice();
+            profit -= products.get(item).getQuantity() * products.get(item).getPrice();
 
             products.remove(item);
             return statement;
